@@ -1,0 +1,91 @@
+{
+  "$comment": "Default values and UI ranges for every user-facing setting. All lengths/areas are PHYSICAL (finished model, millimetres / mm²) unless noted. 'max' values are the slider ends used in the mock; the number field should still accept values beyond them within hardMax. Values marked TBC are design guesses the owner has not confirmed.",
+  "area": {
+    "selectionShape": "circle",
+    "selectionShapes": ["circle", "square", "rectangle"],
+    "example": { "city": "Kyiv", "centre": { "lat": 50.4501, "lon": 30.5234 }, "extentKm": { "w": 12, "h": 12 } }
+  },
+  "model": {
+    "shape": "circle",
+    "shapes": ["circle", "square", "rectangle"],
+    "widthMm": { "default": 180, "min": 40, "max": 300, "label": "Diameter (circle) / Width & height (square) / Width (rectangle)" },
+    "heightMm": { "derived": true, "rule": "widthMm * selectionBBox.h / selectionBBox.w for rectangle; locked in the UI" },
+    "foundationHeightMm": { "default": 2.0, "min": 0.4, "max": 6 },
+    "base": { "enabled": true, "thicknessMm": { "default": 1.4, "min": 0.4, "max": 4 } },
+    "roadsAndRailHeightMm": { "default": 0.8, "min": 0.2, "max": 2, "lives": "Features tab" }
+  },
+  "features": {
+    "roads": {
+      "motorway":    { "enabled": true,  "widthMm": 1.6 },
+      "trunk":       { "enabled": true,  "widthMm": 1.5 },
+      "primary":     { "enabled": true,  "widthMm": 1.3 },
+      "secondary":   { "enabled": true,  "widthMm": 1.1 },
+      "tertiary":    { "enabled": true,  "widthMm": 0.9 },
+      "residential": { "enabled": true,  "widthMm": 0.7 },
+      "service":     { "enabled": false, "widthMm": 0.5 },
+      "paths":       { "enabled": false, "widthMm": 0.4, "label": "Paths & footways" }
+    },
+    "railways": {
+      "rail":      { "enabled": true,  "widthMm": 1.0 },
+      "lightRail": { "enabled": true,  "widthMm": 0.7 },
+      "tram":      { "enabled": false, "widthMm": 0.5 }
+    },
+    "widthRangeMm": { "min": 0.1, "max": 3, "step": 0.05 },
+    "osmTagMapping": {
+      "motorway": ["highway=motorway", "highway=motorway_link"],
+      "trunk": ["highway=trunk", "highway=trunk_link"],
+      "primary": ["highway=primary", "highway=primary_link"],
+      "secondary": ["highway=secondary", "highway=secondary_link"],
+      "tertiary": ["highway=tertiary", "highway=tertiary_link"],
+      "residential": ["highway=residential", "highway=unclassified", "highway=living_street"],
+      "service": ["highway=service"],
+      "paths": ["highway=pedestrian", "highway=footway", "highway=path", "highway=cycleway", "highway=track", "highway=steps"],
+      "rail": ["railway=rail"],
+      "lightRail": ["railway=light_rail"],
+      "tram": ["railway=tram"],
+      "excludedAlways": ["tunnel=yes", "tunnel=building_passage", "tunnel=culvert", "covered=yes", "layer<0 on railway=subway", "railway=subway"],
+      "bridgesKept": ["bridge=*  (any value except 'no')"]
+    }
+  },
+  "quality": {
+    "roundCorners": { "enabled": true, "radiusMm": { "default": 0.35, "min": 0, "max": 1.5, "step": 0.05 } },
+    "smoothPaths": { "enabled": true, "strengthMm": { "default": 0.2, "min": 0, "max": 1, "step": 0.05 } },
+    "fillGaps": { "enabled": true, "smallerThanMm2": { "default": 2.0, "min": 0, "max": 10, "step": 0.1 } },
+    "note": "Corner rounding and path smoothing are independent switches with independent strengths."
+  },
+  "water": {
+    "removeSmallPatches": { "enabled": true, "smallerThanMm2": { "default": 4.0, "min": 0, "max": 20, "step": 0.1 } },
+    "fillSmallIslands": { "enabled": true, "smallerThanMm2": { "default": 1.5, "min": 0, "max": 20, "step": 0.1 } },
+    "removeThinBranches": { "enabled": true, "minWidthMm": { "default": 0.8, "min": 0, "max": 3, "step": 0.05 } },
+    "smoothOutlines": { "enabled": true, "strengthMm": { "default": 0.4, "min": 0, "max": 2, "step": 0.05 } },
+    "note": "Patch removal and island filling are separate; neither affects the other's threshold."
+  },
+  "borderAndClock": {
+    "border": { "enabled": true, "widthMm": { "default": 7.0, "min": 1, "max": 15, "step": 0.1, "status": "TBC" }, "heightMm": { "default": 3.0, "min": 0.4, "max": 5, "step": 0.1, "status": "TBC" }, "heightIsAbove": "foundation top" },
+    "clock": {
+      "enabled": true,
+      "style": { "default": "arabic", "options": ["arabic", "roman", "marks"], "labels": { "arabic": "1 2 3", "roman": "I II III", "marks": "Hour marks" } },
+      "dial": { "default": "full", "options": ["full", "quarters"], "labels": { "full": "Full dial", "quarters": "12 · 3 · 6 · 9" } },
+      "placement": { "default": "border", "options": ["border", "inside"], "labels": { "border": "On border", "inside": "Inside map" } },
+      "relief": { "default": "raised", "options": ["raised", "engraved"] },
+      "sizeMm": { "default": 5.0, "min": 1, "max": 12, "step": 0.1, "status": "TBC" },
+      "reliefDepthMm": { "default": 0.6, "min": 0.1, "max": 2, "step": 0.1, "labelRaised": "Raised height", "labelEngraved": "Engraving depth", "status": "TBC" },
+      "romanFour": "IV"
+    },
+    "centreHole": { "enabled": true, "diameterMm": { "default": 6.0, "min": 1, "max": 30, "step": 0.1, "status": "TBC" }, "passesThrough": "every layer" }
+  },
+  "preview": {
+    "statuses": ["none", "stale", "generating", "ready"],
+    "generatingSteps": [
+      { "label": "Reading roads & rail", "from": 0 },
+      { "label": "Building geometry", "from": 20 },
+      { "label": "Cutting water & base", "from": 45 },
+      { "label": "Border, clock & hole", "from": 70 },
+      { "label": "Assembling mesh", "from": 90 }
+    ]
+  },
+  "data": {
+    "defaultFolder": "~/Documents/City Map Studio/Data",
+    "coverageStates": ["ok", "partial", "missing"]
+  }
+}

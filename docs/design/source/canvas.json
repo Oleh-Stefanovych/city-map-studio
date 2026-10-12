@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-12T09:00:00Z" },
+  "title": "City Map Studio",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Main window · Features · preview out of date (interactive)", "is_interactive": true, "radius": 12 },
+    "Download.dc.html": { "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "No local data · download proposal", "radius": 12 },
+    "Generating.dc.html": { "x": 3040, "y": 0, "w": 1440, "h": 900, "title": "Generating preview · Water tab", "radius": 12 },
+    "Ready.dc.html": { "x": 0, "y": 1020, "w": 1440, "h": 900, "title": "Up to date · Border & Clock tab · export ready", "radius": 12 },
+    "Model.dc.html": { "x": 1520, "y": 1020, "w": 1440, "h": 900, "title": "Model tab · selection beyond local coverage", "radius": 12 },
+    "Quality.dc.html": { "x": 3040, "y": 1020, "w": 1440, "h": 900, "title": "Quality tab · rectangle selection", "radius": 12 }
+  },
+  "order": ["Main.dc.html", "Download.dc.html", "Generating.dc.html", "Ready.dc.html", "Model.dc.html", "Quality.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "City Map Studio — macOS window, key states", "kind": "title1", "maxW": 4480 }
+  },
+  "designSystems": []
+}

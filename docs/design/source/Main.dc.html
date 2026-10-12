@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>City Map Studio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+button{font-family:inherit}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="position:relative; width:1440px; height:900px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; border-radius:12px; border:1px solid #BFC3CB; background:#ECEDEF; color:#1E2430; font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif; font-size:13px">
+
+  <!-- Toolbar -->
+  <div style="position:relative; height:52px; flex:none; display:flex; align-items:center; padding:0 16px 0 20px; background:linear-gradient(#FCFCFD,#F0F1F4); border-bottom:1px solid #D2D5DB">
+    <div style="flex:1; display:flex; align-items:center; gap:18px; min-width:0">
+      <div style="display:flex; gap:8px">
+        <span style="width:12px; height:12px; border-radius:6px; background:#FF5F57"></span>
+        <span style="width:12px; height:12px; border-radius:6px; background:#FEBC2E"></span>
+        <span style="width:12px; height:12px; border-radius:6px; background:#28C840"></span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; white-space:nowrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E2430" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+        <span style="font-weight:700">City Map Studio</span>
+        <span style="color:#5B6372">{{docName}}</span>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; height:28px; padding:0 14px 0 12px; border-radius:14px; background:{{pill.bg}}; color:{{pill.fg}}; font-size:12.5px; font-weight:600; white-space:nowrap">
+      <span style="width:8px; height:8px; border-radius:4px; background:{{pill.dot}}"></span>
+      <span>{{pill.text}}</span>
+    </div>
+
+    <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:8px">
+      <button onClick="{{gen.click}}" style="height:32px; display:flex; align-items:center; gap:7px; padding:0 14px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; background:{{gen.bg}}; color:{{gen.fg}}; border:1px solid {{gen.bd}}">
+        <sc-if value="{{gen.isCancel}}" hint-placeholder-val="{{ false }}">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor"/></svg>
+        </sc-if>
+        <sc-if value="{{gen.isRun}}" hint-placeholder-val="{{ true }}">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4L10 6z" fill="currentColor"/></svg>
+        </sc-if>
+        <span>{{gen.label}}</span>
+      </button>
+      <button disabled="{{exp.disabled}}" title="{{exp.title}}" style="height:32px; display:flex; align-items:center; gap:7px; padding:0 14px; border-radius:7px; font-size:13px; font-weight:600; cursor:{{exp.cursor}}; background:{{exp.bg}}; color:{{exp.fg}}; border:1px solid {{exp.bd}}">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="m4.5 6.8 3.5 3.5 3.5-3.5"/><path d="M2.5 13h11"/></svg>
+        <span>Export 3MF</span>
+      </button>
+    </div>
+    <div style="position:absolute; left:0; bottom:-1px; height:2px; width:{{progW}}%; background:#2F6FED; display:{{progD}}"></div>
+  </div>
+
+  <!-- Panes -->
+  <div style="flex:1; min-height:0; display:flex">
+
+    <!-- LEFT: OSM area selection -->
+    <div style="width:400px; flex:none; display:flex; flex-direction:column; min-height:0; background:#F7F7F8">
+      <div style="flex:none; display:flex; flex-direction:column; gap:10px; padding:12px; border-bottom:1px solid #D6D8DD">
+        <div style="display:flex; gap:8px">
+          <div style="flex:1; min-width:0; position:relative">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#5B6372" stroke-width="1.6" stroke-linecap="round" style="position:absolute; left:10px; top:10px" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="m10.5 10.5 3 3"/></svg>
+            <input aria-label="Search city" value="Kyiv, Ukraine" style="box-sizing:border-box; width:100%; height:35px; padding:0 10px 0 33px; border:1px solid #CBCED6; border-radius:8px; background:#fff; font-size:13px; color:#1E2430">
+          </div>
+          <button style="height:35px; display:flex; align-items:center; gap:6px; padding:0 11px; border:1px solid #CBCED6; border-radius:8px; background:#fff; font-size:12.5px; font-weight:600; color:#1E2430; cursor:pointer; white-space:nowrap">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 4.2c0-.7.5-1.2 1.2-1.2h3l1.5 1.6h4.5c.7 0 1.2.5 1.2 1.2v6.2c0 .7-.5 1.2-1.2 1.2H3c-.7 0-1.2-.5-1.2-1.2z"/></svg>
+            Open PBF…
+          </button>
+        </div>
+
+        <sc-if value="{{dm.ok}}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:#E8F5EC; border:1px solid #BFE0CB">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#14753F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m6.5 10.2 2.4 2.4 4.6-4.9"/></svg>
+            <div style="flex:1; min-width:0">
+              <div style="font-weight:600; font-size:12.5px; color:#0F4F2B">Local data covers this area</div>
+              <div style="font-size:11.5px; color:#3B5E49; margin-top:1px">ukraine-latest.osm.pbf · 920 MB · geometry cached</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{dm.partial}}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:#FFF4D6; border:1px solid #EBCB83">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#8A5A00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2.8 18 16.5H2z"/><path d="M10 8v4"/><path d="M10 14.4v.1"/></svg>
+            <div style="flex:1; min-width:0">
+              <div style="font-weight:600; font-size:12.5px; color:#5C3B00">Selection extends 2.1 km past local data</div>
+              <div style="font-size:11.5px; color:#6E5320; margin-top:1px">Covered by kyiv-city.osm.pbf · 38 MB</div>
+            </div>
+            <button onClick="{{openDlg}}" style="height:28px; padding:0 10px; border:1px solid #D2A94A; border-radius:7px; background:#fff; color:#5C3B00; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap">Download…</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{dm.missing}}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:9px; background:#FBE8E4; border:1px solid #EFB8AC">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#A3280F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M10 6v5"/><path d="M10 13.8v.1"/></svg>
+            <div style="flex:1; min-width:0">
+              <div style="font-weight:600; font-size:12.5px; color:#6E1A08">No local data for Kyiv</div>
+              <div style="font-size:11.5px; color:#7A3A2C; margin-top:1px">A regional download is available</div>
+            </div>
+            <button onClick="{{openDlg}}" style="height:28px; padding:0 10px; border:1px solid #C9431B; border-radius:7px; background:#C9431B; color:#fff; font-size:12px; font-weight:600; cursor:pointer">Download…</button>
+          </div>
+        </sc-if>
+
+        <div style="display:flex; align-items:center; gap:10px">
+          <span style="font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#5B6372">Area</span>
+          <div style="flex:1; display:flex; gap:2px; padding:2px; border-radius:8px; background:#E4E6EA">
+            <sc-for list="{{shapes}}" as="s" hint-placeholder-count="3">
+              <button onClick="{{s.pick}}" style="flex:1; height:28px; display:flex; align-items:center; justify-content:center; gap:6px; border:0; border-radius:6px; font-size:12.5px; font-weight:{{s.fw}}; cursor:pointer; background:{{s.bg}}; color:{{s.fg}}; box-shadow:{{s.sh}}">
+                <sc-if value="{{s.isCircle}}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="5.6"/></svg></sc-if>
+                <sc-if value="{{s.isSquare}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.6" y="2.6" width="10.8" height="10.8" rx="1.2"/></svg></sc-if>
+                <sc-if value="{{s.isRect}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.8" y="4" width="12.4" height="8" rx="1.2"/></svg></sc-if>
+                {{s.label}}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div style="flex:1; min-height:0; position:relative; overflow:hidden; background:#F2EFE9">
+        <svg viewBox="0 0 400 554" preserveAspectRatio="xMidYMid slice" style="position:absolute; left:0; top:0; width:100%; height:100%; display:block" aria-label="OpenStreetMap view of Kyiv with the selected area" role="img">
+          <defs>
+            <g id="minor" fill="none" stroke-linecap="round">
+              <path d="M 0 30 H 240 M 0 78 H 240 M 0 126 H 240 M 0 174 H 240 M 0 222 H 240 M 0 270 H 240 M 0 318 H 240 M 0 400 H 240 M 0 448 H 240 M 0 496 H 240"/>
+              <path d="M 330 78 H 400 M 330 174 H 400 M 330 270 H 400 M 345 400 H 400 M 372 496 H 400"/>
+              <path d="M 40 0 V 554 M 140 0 V 554 M 185 0 V 554 M 230 0 V 554"/>
+            </g>
+            <g id="major" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 0 200 C 100 190 180 215 250 205 L 400 190"/>
+              <path d="M 0 420 C 90 430 200 410 290 415 S 350 440 400 450"/>
+              <path d="M 160 0 V 554"/>
+            </g>
+            <g id="trunk" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M -10 60 C 120 80 200 120 262 140 S 380 130 410 90"/>
+              <path d="M 0 500 C 80 470 170 520 235 480 S 330 330 420 340"/>
+            </g>
+            <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="rgba(60,66,80,0.10)"/><rect width="3" height="8" fill="rgba(60,66,80,0.14)"/></pattern>
+          </defs>
+
+          <g style="display:{{mapD}}">
+            <rect width="400" height="554" fill="#F2EFE9"/>
+            <path d="M 8 392 Q 60 360 118 408 L 96 478 L 24 462 Z" fill="#CDEBB0"/>
+            <path d="M 18 50 L 118 36 L 142 96 L 56 118 Z" fill="#CDEBB0"/>
+            <path d="M 190 300 L 232 296 L 238 352 L 196 358 Z" fill="#CDEBB0"/>
+            <path d="M 345 300 L 400 292 L 400 372 L 352 366 Z" fill="#CDEBB0"/>
+            <rect x="60" y="240" width="9" height="7" fill="#D9D0C9"/><rect x="74" y="244" width="11" height="8" fill="#D9D0C9"/><rect x="96" y="238" width="8" height="9" fill="#D9D0C9"/>
+            <rect x="150" y="136" width="10" height="8" fill="#D9D0C9"/><rect x="166" y="140" width="9" height="9" fill="#D9D0C9"/><rect x="108" y="180" width="12" height="8" fill="#D9D0C9"/>
+            <rect x="196" y="236" width="10" height="9" fill="#D9D0C9"/><rect x="146" y="278" width="9" height="8" fill="#D9D0C9"/><rect x="114" y="228" width="10" height="7" fill="#D9D0C9"/>
+            <path d="M 268 -10 C 290 70 300 130 272 200 S 252 330 296 395 S 332 490 306 565" fill="none" stroke="#AAD3DF" stroke-width="52" stroke-linecap="round"/>
+            <ellipse cx="100" cy="355" rx="30" ry="18" fill="#AAD3DF"/>
+            <ellipse cx="275" cy="236" rx="13" ry="36" fill="#CDEBB0" stroke="#AAD3DF" stroke-width="2"/>
+            <use href="#minor" stroke="#D3CEC4" stroke-width="5"/>
+            <use href="#minor" stroke="#FFFFFF" stroke-width="3.2"/>
+            <use href="#major" stroke="#C99A55" stroke-width="8"/>
+            <use href="#major" stroke="#FCD6A4" stroke-width="5.6"/>
+            <use href="#trunk" stroke="#CC6677" stroke-width="9"/>
+            <use href="#trunk" stroke="#F4A3AE" stroke-width="6.2"/>
+            <path d="M 0 330 C 90 300 200 320 262 290 S 360 270 400 250" fill="none" stroke="#8C8C8C" stroke-width="2.6"/>
+            <path d="M 0 330 C 90 300 200 320 262 290 S 360 270 400 250" fill="none" stroke="#fff" stroke-width="1.2" stroke-dasharray="6 6"/>
+            <text x="306" y="150" font-size="12" font-style="italic" fill="#4F86A0" transform="rotate(84 306 150)">Dnipro</text>
+            <text x="112" y="292" font-size="16" font-weight="700" fill="#2B2B2B" stroke="#F2EFE9" stroke-width="3" paint-order="stroke">Kyiv</text>
+            <text x="62" y="152" font-size="11" fill="#6B6B6B" stroke="#F2EFE9" stroke-width="3" paint-order="stroke">Obolon</text>
+            <text x="186" y="116" font-size="11" fill="#6B6B6B" stroke="#F2EFE9" stroke-width="3" paint-order="stroke">Podil</text>
+            <text x="166" y="372" font-size="11" fill="#6B6B6B" stroke="#F2EFE9" stroke-width="3" paint-order="stroke">Pechersk</text>
+          </g>
+          <g style="display:{{mapMissingD}}">
+            <rect width="400" height="554" fill="#ECEDEF"/>
+            <path d="M 0 92 H 400 M 0 184 H 400 M 0 276 H 400 M 0 368 H 400 M 0 460 H 400 M 80 0 V 554 M 160 0 V 554 M 240 0 V 554 M 320 0 V 554" stroke="#DADCE1" stroke-width="1"/>
+          </g>
+
+          <rect x="330" y="0" width="70" height="554" fill="url(#hatch)" style="display:{{hatchD}}"/>
+          <path d="M 330 0 V 554" stroke="#8A5A00" stroke-width="1.6" stroke-dasharray="6 4" style="display:{{hatchD}}"/>
+
+          <path fill-rule="evenodd" d="{{selPath}}" fill="rgba(24,28,40,0.34)"/>
+          <rect x="{{sel.x}}" y="{{sel.y}}" width="{{sel.w}}" height="{{sel.h}}" rx="{{sel.rx}}" fill="rgba(226,87,43,0.10)" stroke="#E2572B" stroke-width="2.2"/>
+          <g stroke="#E2572B" stroke-width="1.6" stroke-linecap="round" opacity="0.9"><path d="M 192 277 H 208 M 200 269 V 285"/></g>
+          <g>
+            <rect x="{{chip.x}}" y="{{chip.y}}" width="112" height="22" rx="11" fill="#E2572B"/>
+            <text x="{{chip.tx}}" y="{{chip.ty}}" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">{{chip.text}}</text>
+          </g>
+          <g fill="#fff" stroke="#E2572B" stroke-width="2">
+            <circle cx="{{h0.x}}" cy="{{h0.y}}" r="6" style="display:{{h0.d}}"/>
+            <circle cx="{{h1.x}}" cy="{{h1.y}}" r="6" style="display:{{h1.d}}"/>
+            <circle cx="{{h2.x}}" cy="{{h2.y}}" r="6" style="display:{{h2.d}}"/>
+            <circle cx="{{h3.x}}" cy="{{h3.y}}" r="6" style="display:{{h3.d}}"/>
+            <circle cx="{{h4.x}}" cy="{{h4.y}}" r="6" style="display:{{h4.d}}"/>
+            <circle cx="{{h5.x}}" cy="{{h5.y}}" r="6" style="display:{{h5.d}}"/>
+            <circle cx="{{h6.x}}" cy="{{h6.y}}" r="6" style="display:{{h6.d}}"/>
+            <circle cx="{{h7.x}}" cy="{{h7.y}}" r="6" style="display:{{h7.d}}"/>
+          </g>
+        </svg>
+
+        <sc-if value="{{dm.missing}}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); text-align:center; color:#5B6372; font-size:12.5px; line-height:1.5">
+            <div style="font-weight:600; color:#3A4150">No local map data</div>
+            <div>Download a regional extract to draw the map</div>
+          </div>
+        </sc-if>
+
+        <div style="position:absolute; right:10px; top:10px; display:flex; flex-direction:column; border-radius:8px; overflow:hidden; border:1px solid #C9CCD3; background:#fff">
+          <button aria-label="Zoom in" style="width:30px; height:30px; border:0; border-bottom:1px solid #DCDEE3; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="14" height="14" viewBox="0 0 14 14" stroke="#1E2430" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg></button>
+          <button aria-label="Zoom out" style="width:30px; height:30px; border:0; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="14" height="14" viewBox="0 0 14 14" stroke="#1E2430" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 7h10"/></svg></button>
+        </div>
+        <div style="position:absolute; right:6px; bottom:6px; padding:2px 6px; border-radius:4px; background:rgba(255,255,255,.8); font-size:11px; color:#4A5160">© OpenStreetMap contributors · local PBF</div>
+      </div>
+
+      <div style="flex:none; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px 12px; padding:12px 16px; border-top:1px solid #D6D8DD">
+        <div><div style="font-size:11px; color:#5B6372">Selected area</div><div style="font-weight:600; margin-top:1px">{{sizeText}}</div></div>
+        <div><div style="font-size:11px; color:#5B6372">Finished model</div><div style="font-weight:600; margin-top:1px">{{modelText}}</div></div>
+        <div><div style="font-size:11px; color:#5B6372">Centre</div><div style="font-weight:600; margin-top:1px">50.4501° N, 30.5234° E</div></div>
+        <div><div style="font-size:11px; color:#5B6372">Scale</div><div style="font-weight:600; margin-top:1px">1 : 66 700</div></div>
+      </div>
+    </div>
+
+    <div style="width:1px; flex:none; background:#CBCED5; position:relative"><div style="position:absolute; left:-2px; top:50%; margin-top:-16px; width:5px; height:32px; border-radius:3px; background:#B7BBC4"></div></div>
+
+    <!-- CENTRE: 3D preview -->
+    <div style="flex:1; min-width:0; position:relative; overflow:hidden; background:radial-gradient(ellipse at 50% 46%, #E6E9EE 0%, #D8DBE0 55%, #CBCFD7 100%)">
+      <svg viewBox="0 0 656 817" preserveAspectRatio="xMidYMid meet" style="position:absolute; left:0; top:0; width:100%; height:100%; display:block" aria-label="3D preview of the generated city model" role="img">
+        <defs>
+          <filter id="blur" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
+          <g id="wshape">
+            <path d="M 90 -265 C 140 -200 160 -120 130 -50 S 90 60 130 120 S 170 200 150 265" fill="none" stroke-width="56" stroke-linecap="round"/>
+            <ellipse cx="-170" cy="175" rx="36" ry="22" stroke="none"/>
+            <path style="display:{{thinD}}" d="M 132 -48 C 190 -40 215 -10 225 40" fill="none" stroke-width="5" stroke-linecap="round"/>
+            <circle style="display:{{pondD}}" cx="-60" cy="-130" r="3.2" stroke="none"/>
+          </g>
+          <g id="ishape">
+            <ellipse cx="135" cy="-35" rx="14" ry="30" stroke="none"/>
+            <circle style="display:{{islD}}" cx="121" cy="92" r="3" stroke="none"/>
+          </g>
+          <mask id="m1" maskUnits="userSpaceOnUse" x="-260" y="-260" width="520" height="520">
+            <rect x="{{g.x}}" y="{{g.y}}" width="{{g.w}}" height="{{g.h}}" rx="{{g.rx}}" fill="#fff"/>
+            <use href="#wshape" fill="#000" stroke="#000"/>
+            <use href="#ishape" fill="#fff" stroke="none"/>
+            <circle r="{{holeR}}" fill="#000" style="display:{{holeD}}"/>
+          </mask>
+          <mask id="m2" maskUnits="userSpaceOnUse" x="-260" y="-260" width="520" height="520">
+            <use href="#wshape" fill="#fff" stroke="#fff"/>
+            <use href="#ishape" fill="#000" stroke="none"/>
+          </mask>
+          <clipPath id="cc"><rect x="{{g.x}}" y="{{g.y}}" width="{{g.w}}" height="{{g.h}}" rx="{{g.rx}}"/></clipPath>
+          <rect id="ring" x="{{ring.x}}" y="{{ring.y}}" width="{{ring.w}}" height="{{ring.h}}" rx="{{ring.rx}}" fill="none" stroke-width="{{ringW}}"/>
+          <clipPath id="hc"><ellipse cx="328" cy="410" rx="{{holeR}}" ry="{{holeRy}}"/></clipPath>
+          <g id="roads" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path style="display:{{rd.res.d}}" stroke-width="{{rd.res.w}}" d="M -210 -230 V 140 M -160 -230 V 140 M -85 -250 V 250 M -35 -250 V 250 M 40 -250 V 250 M -250 -210 H 70 M -250 -160 H 70 M -250 -50 H 70 M -250 -5 H 70 M -250 45 H 90 M -250 140 H 90 M -250 215 H 90 M -250 238 H 40 M 215 -60 H 250 M 215 -20 H 250 M 205 45 H 250 M 215 140 H 250"/>
+            <path style="display:{{rd.tertiary.d}}" stroke-width="{{rd.tertiary.w}}" d="M -110 -250 V 250 M 10 -250 V 250 M 70 -250 V 90"/>
+            <path style="display:{{rd.secondary.d}}" stroke-width="{{rd.secondary.w}}" d="M -250 105 C -100 95 40 110 250 85 M -60 -250 C -70 -100 -60 100 -50 250"/>
+            <path style="display:{{rd.primary.d}}" stroke-width="{{rd.primary.w}}" d="M -250 -95 C -120 -105 40 -90 250 -120"/>
+            <path style="display:{{rd.trunk.d}}" stroke-width="{{rd.trunk.w}}" d="M -210 -150 C -120 -90 -60 -30 0 10 S 140 150 200 200"/>
+            <path style="display:{{rd.motorway.d}}" stroke-width="{{rd.motorway.w}}" d="M -172 0 A 172 172 0 1 0 172 0 A 172 172 0 1 0 -172 0 Z"/>
+            <path style="display:{{rd.service.d}}" stroke-width="{{rd.service.w}}" d="M -20 -30 H 5 M -100 80 V 100 M 25 -190 V -170 M -140 -120 H -120 M 20 150 H 60"/>
+            <path style="display:{{rd.path.d}}" stroke-width="{{rd.path.w}}" d="M -200 -60 L -150 -30 L -120 -45 L -80 -10"/>
+            <path style="display:{{rd.rail.d}}" stroke-width="{{rd.rail.w}}" d="M -250 12 C -150 30 -40 20 40 8 S 200 -5 250 -8"/>
+            <path style="display:{{rd.light.d}}" stroke-width="{{rd.light.w}}" d="M -250 -140 C -170 -150 -80 -120 20 -150"/>
+            <path style="display:{{rd.tram.d}}" stroke-width="{{rd.tram.w}}" d="M -170 -230 C -150 -120 -140 0 -150 120"/>
+          </g>
+        </defs>
+
+        <g style="display:{{modelD}}; opacity:{{modelOp}}; filter:{{modelFilter}}">
+          <ellipse cx="328" cy="{{shadowY}}" rx="{{shadowRx}}" ry="{{shadowRy}}" fill="rgba(30,36,50,0.30)" filter="url(#blur)"/>
+          <path d="{{baseWall}}" fill="#8FB1C4" style="display:{{baseD}}"/>
+          <path d="{{foundWall}}" fill="#C8BA9C"/>
+          <g transform="translate(328,410) scale(1,0.62)">
+            <g mask="url(#m2)">
+              <rect x="-260" y="-260" width="520" height="520" fill="#B9AB8C"/>
+              <g transform="translate(0,{{floorDy}})"><rect x="-260" y="-260" width="520" height="520" fill="{{floorColor}}"/></g>
+            </g>
+            <g mask="url(#m1)"><rect x="{{g.x}}" y="{{g.y}}" width="{{g.w}}" height="{{g.h}}" rx="{{g.rx}}" fill="#E9DFC9"/></g>
+          </g>
+
+          <g transform="{{r0.t}}" style="display:{{r0.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r0.c}}"/></g></g>
+          <g transform="{{r1.t}}" style="display:{{r1.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r1.c}}"/></g></g>
+          <g transform="{{r2.t}}" style="display:{{r2.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r2.c}}"/></g></g>
+          <g transform="{{r3.t}}" style="display:{{r3.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r3.c}}"/></g></g>
+          <g transform="{{r4.t}}" style="display:{{r4.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r4.c}}"/></g></g>
+          <g transform="{{r5.t}}" style="display:{{r5.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r5.c}}"/></g></g>
+          <g transform="{{r6.t}}" style="display:{{r6.d}}"><g clip-path="url(#cc)"><use href="#roads" stroke="{{r6.c}}"/></g></g>
+
+          <g transform="{{b0.t}}" style="display:{{b0.d}}"><use href="#ring" stroke="{{b0.c}}"/></g>
+          <g transform="{{b1.t}}" style="display:{{b1.d}}"><use href="#ring" stroke="{{b1.c}}"/></g>
+          <g transform="{{b2.t}}" style="display:{{b2.d}}"><use href="#ring" stroke="{{b2.c}}"/></g>
+          <g transform="{{b3.t}}" style="display:{{b3.d}}"><use href="#ring" stroke="{{b3.c}}"/></g>
+          <g transform="{{b4.t}}" style="display:{{b4.d}}"><use href="#ring" stroke="{{b4.c}}"/></g>
+          <g transform="{{b5.t}}" style="display:{{b5.d}}"><use href="#ring" stroke="{{b5.c}}"/></g>
+          <g transform="{{b6.t}}" style="display:{{b6.d}}"><use href="#ring" stroke="{{b6.c}}"/></g>
+          <g transform="{{b7.t}}" style="display:{{b7.d}}"><use href="#ring" stroke="{{b7.c}}"/></g>
+          <g transform="{{b8.t}}" style="display:{{b8.d}}"><use href="#ring" stroke="{{b8.c}}"/></g>
+          <g transform="{{b9.t}}" style="display:{{b9.d}}"><use href="#ring" stroke="{{b9.c}}"/></g>
+          <g transform="{{b10.t}}" style="display:{{b10.d}}"><use href="#ring" stroke="{{b10.c}}"/></g>
+          <g transform="{{b11.t}}" style="display:{{b11.d}}"><use href="#ring" stroke="{{b11.c}}"/></g>
+          <g transform="{{b12.t}}" style="display:{{b12.d}}"><use href="#ring" stroke="{{b12.c}}"/></g>
+
+          <g style="display:{{holeD}}">
+            <ellipse cx="328" cy="410" rx="{{holeR}}" ry="{{holeRy}}" fill="#8A7C60"/>
+            <g clip-path="url(#hc)"><ellipse cx="328" cy="{{holeBottomY}}" rx="{{holeR}}" ry="{{holeRy}}" fill="#D8DBE0"/></g>
+            <ellipse cx="328" cy="410" rx="{{holeR}}" ry="{{holeRy}}" fill="none" stroke="#B9AB8C" stroke-width="1"/>
+          </g>
+        </g>
+      </svg>
+
+      <!-- Clock markings (screen-space, squashed to match the tilt) -->
+      <div style="position:absolute; left:0; top:0; width:656px; height:817px; pointer-events:none; display:{{modelD}}; opacity:{{modelOp}}; filter:{{modelFilter}}">
+        <sc-for list="{{marks}}" as="m" hint-placeholder-count="12">
+          <div style="{{m.style}}">{{m.text}}</div>
+        </sc-for>
+      </div>
+
+      <!-- Overlays -->
+      <sc-if value="{{st.stale}}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute; left:16px; top:16px; display:flex; align-items:center; gap:9px; height:34px; padding:0 8px 0 12px; border-radius:9px; background:#FFF1CC; border:1px solid #E6C56A; color:#5C3B00; font-size:12.5px">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#8A5A00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="M10 5.5V10l3 2"/></svg>
+          <span><b>Out of date.</b> Showing the previous preview.</span>
+          <button onClick="{{gen.click}}" style="height:24px; padding:0 9px; border:1px solid #D2A94A; border-radius:6px; background:#fff; color:#5C3B00; font-size:12px; font-weight:600; cursor:pointer">Regenerate</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{st.ready}}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; left:16px; top:16px; display:flex; align-items:center; gap:8px; height:30px; padding:0 12px; border-radius:9px; background:#DDF3E4; border:1px solid #A9D6B8; color:#14532D; font-size:12.5px; font-weight:600">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#14753F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10.5 3.6 3.6 7.4-8"/></svg>
+          Up to date with current settings
+        </div>
+      </sc-if>
+
+      <div style="position:absolute; right:16px; top:16px; display:flex; gap:2px; padding:2px; border-radius:8px; background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.9); box-shadow:0 4px 14px rgba(30,36,50,.14); backdrop-filter:blur(12px)">
+        <button style="height:26px; padding:0 10px; border:0; border-radius:6px; background:#1E2430; color:#fff; font-size:12px; font-weight:600; cursor:pointer">Perspective</button>
+        <button style="height:26px; padding:0 10px; border:0; border-radius:6px; background:transparent; color:#3A4150; font-size:12px; font-weight:600; cursor:pointer">Top</button>
+        <button style="height:26px; padding:0 10px; border:0; border-radius:6px; background:transparent; color:#3A4150; font-size:12px; font-weight:600; cursor:pointer">Front</button>
+      </div>
+
+      <sc-if value="{{st.none}}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:300px; text-align:center; color:#4A5160">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#7A8294" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>
+          <div style="font-weight:700; font-size:15px; color:#2B3240; margin-top:10px">No preview yet</div>
+          <div style="font-size:12.5px; line-height:1.5; margin-top:6px">Choose an area, adjust the settings, then click Generate Preview. The model is only built on request.</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{st.gen}}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:340px; box-sizing:border-box; padding:18px 18px 16px; border-radius:14px; background:#fff; border:1px solid #C9CCD3; box-shadow:0 18px 40px rgba(20,26,40,.22)">
+          <div style="display:flex; align-items:baseline; justify-content:space-between">
+            <div style="font-weight:700; font-size:14px">Generating preview</div>
+            <div style="font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; color:#17408F">{{progress}}%</div>
+          </div>
+          <div style="height:6px; border-radius:3px; background:#E1E4EA; margin-top:10px; overflow:hidden"><div style="height:100%; width:{{progress}}%; border-radius:3px; background:#2F6FED"></div></div>
+          <div style="display:flex; flex-direction:column; gap:7px; margin-top:14px">
+            <sc-for list="{{steps}}" as="p" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:9px; font-size:12.5px; color:{{p.color}}; font-weight:{{p.fw}}">
+                <sc-if value="{{p.isDone}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#1E9E55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10.5 3.6 3.6 7.4-8"/></svg></sc-if>
+                <sc-if value="{{p.isNow}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.4" fill="none" stroke="#2F6FED" stroke-width="2.4"/><circle cx="10" cy="10" r="2.6" fill="#2F6FED"/></svg></sc-if>
+                <sc-if value="{{p.isWait}}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="#B3B8C2" stroke-width="2"/></svg></sc-if>
+                <span>{{p.label}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <button onClick="{{gen.click}}" style="margin-top:16px; width:100%; height:32px; border:1px solid #CBCED6; border-radius:8px; background:#F4F5F7; color:#1E2430; font-size:13px; font-weight:600; cursor:pointer">Cancel</button>
+        </div>
+      </sc-if>
+
+      <div style="position:absolute; left:16px; bottom:16px; width:196px; box-sizing:border-box; padding:10px 12px 11px; border-radius:10px; background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.9); box-shadow:0 4px 14px rgba(30,36,50,.14); backdrop-filter:blur(12px)">
+        <div style="font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#5B6372; margin-bottom:7px">Layers</div>
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <sc-for list="{{legend}}" as="l" hint-placeholder-count="5">
+            <div style="display:flex; align-items:center; gap:8px; font-size:12px; opacity:{{l.op}}">
+              <span style="width:12px; height:12px; border-radius:3px; background:{{l.color}}; border:1px solid {{l.bd}}; box-sizing:border-box"></span>
+              <span style="flex:1">{{l.name}}</span>
+              <span style="color:#5B6372; font-variant-numeric:tabular-nums">{{l.val}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position:absolute; left:50%; bottom:20px; transform:translateX(-50%); width:200px; text-align:center; font-size:11px; line-height:1.45; color:#4A5160">Drag to orbit · ⌥ drag to pan · scroll to zoom. Moving the view never rebuilds the model.</div>
+      <div style="position:absolute; right:16px; bottom:16px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.9); box-shadow:0 4px 14px rgba(30,36,50,.14); backdrop-filter:blur(12px); font-size:12px; text-align:right; line-height:1.5">
+        <div style="font-weight:700">{{modelText}}</div>
+        <div style="color:#5B6372">{{heightText}} tall</div>
+      </div>
+    </div>
+
+    <div style="width:1px; flex:none; background:#CBCED5; position:relative"><div style="position:absolute; left:-2px; top:50%; margin-top:-16px; width:5px; height:32px; border-radius:3px; background:#B7BBC4"></div></div>
+
+    <!-- RIGHT: settings -->
+    <div style="width:380px; flex:none; display:flex; flex-direction:column; min-height:0; background:#F7F7F8">
+      <div style="flex:none; padding:9px 10px; background:#F1F2F4; border-bottom:1px solid #D6D8DD">
+        <div style="display:flex; gap:2px; padding:2px; border-radius:10px; background:#E1E4E9">
+          <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+            <button onClick="{{t.pick}}" style="flex:1 1 auto; height:30px; padding:0 6px; border:0; border-radius:8px; background:{{t.bg}}; box-shadow:{{t.sh}}; font-size:12.5px; font-weight:{{t.fw}}; color:{{t.color}}; cursor:pointer; white-space:nowrap">{{t.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex:1; min-height:0; overflow:auto; padding:2px 0 12px">
+        <sc-for list="{{controls}}" as="c" hint-placeholder-count="10">
+          <sc-if value="{{c.isSection}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:6px; padding:14px 16px 5px; border-top:{{c.bt}}">
+              <span style="font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#5B6372">{{c.label}}</span>
+              <span style="font-size:11.5px; color:#5B6372">{{c.sub}}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.isToggle}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:center; gap:10px; min-height:34px; padding:4px 16px; opacity:{{c.op}}">
+              <div style="flex:1; min-width:0; font-size:12.5px; line-height:1.3">{{c.label}}</div>
+              <button role="switch" aria-checked="{{c.aria}}" aria-label="{{c.label}}" onClick="{{c.toggle}}" style="position:relative; flex:none; width:36px; height:20px; padding:0; border:0; border-radius:10px; background:{{c.track}}; cursor:pointer"><span style="position:absolute; top:2px; left:{{c.knob}}; width:16px; height:16px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.3)"></span></button>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.isCat}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:center; gap:10px; min-height:34px; padding:4px 16px">
+              <button role="switch" aria-checked="{{c.aria}}" aria-label="{{c.label}}" onClick="{{c.toggle}}" style="position:relative; flex:none; width:36px; height:20px; padding:0; border:0; border-radius:10px; background:{{c.track}}; cursor:pointer"><span style="position:absolute; top:2px; left:{{c.knob}}; width:16px; height:16px; border-radius:8px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.3)"></span></button>
+              <div style="flex:1; min-width:0; font-size:12.5px">{{c.label}}</div>
+              <div style="position:relative; flex:none; width:76px; height:4px; border-radius:2px; background:#D5D8DE; opacity:{{c.wop}}"><div style="position:absolute; left:0; top:0; bottom:0; width:{{c.pct}}%; border-radius:2px; background:#1E2430"></div><div style="position:absolute; top:-4px; left:{{c.pct}}%; margin-left:-6px; width:12px; height:12px; box-sizing:border-box; border-radius:6px; background:#fff; border:1.5px solid #1E2430"></div></div>
+              <div style="flex:none; width:70px; height:26px; box-sizing:border-box; display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:0 8px; background:#fff; border:1px solid #CBCED6; border-radius:6px; opacity:{{c.wop}}"><span style="font-weight:600; font-variant-numeric:tabular-nums">{{c.val}}</span><span style="font-size:11.5px; color:#5B6372">{{c.unit}}</span></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.isNum}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:center; gap:10px; min-height:34px; padding:4px 16px; opacity:{{c.op}}">
+              <div style="flex:1; min-width:0; font-size:12.5px; line-height:1.3">{{c.label}}</div>
+              <div style="position:relative; flex:none; width:88px; height:4px; border-radius:2px; background:#D5D8DE"><div style="position:absolute; left:0; top:0; bottom:0; width:{{c.pct}}%; border-radius:2px; background:#1E2430"></div><div style="position:absolute; top:-4px; left:{{c.pct}}%; margin-left:-6px; width:12px; height:12px; box-sizing:border-box; border-radius:6px; background:#fff; border:1.5px solid #1E2430"></div></div>
+              <div style="flex:none; width:78px; height:26px; box-sizing:border-box; display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:0 8px; background:#fff; border:1px solid #CBCED6; border-radius:6px"><span style="font-weight:600; font-variant-numeric:tabular-nums">{{c.val}}</span><span style="font-size:11.5px; color:#5B6372">{{c.unit}}</span></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.isSeg}}" hint-placeholder-val="{{ false }}">
+            <div style="padding:6px 16px 4px; opacity:{{c.op}}">
+              <div style="font-size:12px; color:#5B6372; margin-bottom:5px">{{c.label}}</div>
+              <div style="display:flex; gap:2px; padding:2px; border-radius:8px; background:#E4E6EA">
+                <sc-for list="{{c.opts}}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{o.pick}}" style="flex:1; height:28px; padding:0 4px; border:0; border-radius:6px; font-size:12.5px; font-weight:{{o.fw}}; cursor:pointer; background:{{o.bg}}; color:{{o.fg}}; box-shadow:{{o.sh}}; white-space:nowrap">{{o.t}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{c.isNote}}" hint-placeholder-val="{{ false }}">
+            <div style="padding:4px 16px 6px; font-size:11.5px; line-height:1.5; color:#5B6372">{{c.label}}</div>
+          </sc-if>
+          <sc-if value="{{c.isStat}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 16px 0; padding:9px 12px; border-radius:8px; background:#E9EAEE; font-size:12.5px"><span>{{c.label}}</span><span style="font-weight:700; font-variant-numeric:tabular-nums">{{c.value}}</span></div>
+          </sc-if>
+        </sc-for>
+      </div>
+      <div style="height:40px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-top:1px solid #D6D8DD; background:#F1F2F4; font-size:11.5px; color:#5B6372">
+        <span>Sizes apply at final scale · 1 mm = 66.7 m</span>
+        <button style="height:24px; padding:0 9px; border:1px solid #CBCED6; border-radius:6px; background:#fff; color:#1E2430; font-size:12px; font-weight:600; cursor:pointer">Reset tab</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div style="height:28px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:#F1F2F4; border-top:1px solid #D6D8DD; font-size:11.5px; color:#4A5160">
+    <span>Data: ukraine-latest.osm.pbf · processed geometry cached (214 MB) · ~/Documents/City Map Studio</span>
+    <span>No buildings · no terrain · tunnels excluded · water is never exported as a solid</span>
+  </div>
+
+  <!-- Download sheet -->
+  <sc-if value="{{dlg.open}}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; left:0; top:0; right:0; bottom:0; display:flex; align-items:flex-start; justify-content:center; padding-top:150px; background:rgba(20,24,34,.38)">
+      <div role="dialog" aria-label="Download map data" style="width:540px; box-sizing:border-box; padding:22px 24px 20px; border-radius:14px; background:#fff; border:1px solid #BFC3CB; box-shadow:0 24px 60px rgba(10,14,24,.35)">
+        <div style="font-size:16px; font-weight:700">Download map data for Kyiv?</div>
+        <div style="font-size:13px; line-height:1.5; color:#4A5160; margin-top:6px">No local OpenStreetMap file covers your 12 km selection. This regional extract does. Nothing is downloaded until you click Download.</div>
+        <div style="margin-top:16px; padding:6px 14px; border-radius:10px; background:#F3F4F6; border:1px solid #E0E2E7">
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #E0E2E7"><span style="color:#5B6372">Region</span><span style="font-weight:600">Ukraine</span></div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #E0E2E7"><span style="color:#5B6372">File</span><span style="font-weight:600">ukraine-latest.osm.pbf</span></div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #E0E2E7"><span style="color:#5B6372">Download size</span><span style="font-weight:600">≈ 920 MB</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0"><span style="color:#5B6372">Save to</span><span style="display:flex; align-items:center; gap:10px"><span style="font-weight:600">~/Documents/City Map Studio/Data</span><button style="height:24px; padding:0 9px; border:1px solid #CBCED6; border-radius:6px; background:#fff; font-size:12px; font-weight:600; cursor:pointer">Change…</button></span></div>
+        </div>
+        <sc-if value="{{dlg.started}}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px">
+            <div style="height:6px; border-radius:3px; background:#E1E4EA; overflow:hidden"><div style="height:100%; width:38%; border-radius:3px; background:#2F6FED"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#4A5160; margin-top:6px"><span>350 MB of 920 MB · 6.4 MB/s</span><span>about 1 min left</span></div>
+          </div>
+        </sc-if>
+        <div style="font-size:12px; line-height:1.5; color:#5B6372; margin-top:12px">The file is kept for reuse, so Kyiv and nearby cities will not need another download.</div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px">
+          <sc-if value="{{dlg.idle}}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{closeDlg}}" style="height:34px; padding:0 16px; border:1px solid #CBCED6; border-radius:8px; background:#fff; font-size:13px; font-weight:600; cursor:pointer">Not now</button>
+            <button onClick="{{startDl}}" style="height:34px; padding:0 18px; border:1px solid #C9431B; border-radius:8px; background:#C9431B; color:#fff; font-size:13px; font-weight:600; cursor:pointer">Download</button>
+          </sc-if>
+          <sc-if value="{{dlg.started}}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{cancelDl}}" style="height:34px; padding:0 18px; border:1px solid #CBCED6; border-radius:8px; background:#fff; font-size:13px; font-weight:600; cursor:pointer">Cancel download</button>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"modelShape":{"editor":"enum","default":"circle","options":["circle","square","rect"],"section":"State"},"tab":{"editor":"enum","default":"features","options":["features","quality","water","model","border"],"section":"State"},"status":{"editor":"enum","default":"stale","options":["none","stale","generating","ready"],"section":"State"},"progress":{"editor":"int","default":62,"min":0,"max":100,"section":"State"},"dialog":{"editor":"enum","default":"none","options":["none","download"],"section":"State"},"coverage":{"editor":"enum","default":"ok","options":["ok","partial","missing"],"section":"State"},"shape":{"editor":"enum","default":"circle","options":["circle","square","rect"],"section":"State"},"numerals":{"editor":"enum","default":"arabic","options":["arabic","roman","marks"],"section":"Clock"},"dial":{"editor":"enum","default":"full","options":["full","quarters"],"section":"Clock"},"place":{"editor":"enum","default":"border","options":["border","inside"],"section":"Clock"},"relief":{"editor":"enum","default":"raised","options":["raised","engraved"],"section":"Clock"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const p = props || {};
+    this.state = {
+      tab: p.tab || 'features',
+      status: p.status || 'stale',
+      progress: p.progress != null && p.progress !== '' ? Number(p.progress) : 62,
+      dialog: p.dialog || 'none',
+      dlStarted: false,
+      coverage: p.coverage || 'ok',
+      shape: p.shape || 'circle',
+      mshape: p.modelShape || 'circle',
+      on: {
+        motorway: true, trunk: true, primary: true, secondary: true, tertiary: true, residential: true, service: false, path: false,
+        rail: true, lightrail: true, tram: false,
+        round: true, smooth: true, gapfill: true,
+        patch: true, island: true, thin: true, wsmooth: true,
+        base: true, border: true, clock: true, hole: true
+      },
+      sel: { numerals: p.numerals || 'arabic', dial: p.dial || 'full', place: p.place || 'border', relief: p.relief || 'raised' }
+    };
+    this.timer = null;
+    this.prev = 'stale';
+  }
+
+  componentWillUnmount() {
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  touch(patch) {
+    const st = this.state;
+    this.setState(Object.assign({}, patch, st.status === 'ready' ? { status: 'stale' } : {}));
+  }
+  flip(id) {
+    const on = Object.assign({}, this.state.on);
+    on[id] = !on[id];
+    this.touch({ on: on });
+  }
+  setSel(key, val) {
+    const sel = Object.assign({}, this.state.sel);
+    sel[key] = val;
+    this.touch({ sel: sel });
+  }
+  generate() {
+    if (this.timer) clearInterval(this.timer);
+    this.prev = this.state.status === 'generating' ? 'stale' : this.state.status;
+    let prog = 2;
+    this.setState({ status: 'generating', progress: prog });
+    this.timer = setInterval(() => {
+      prog += 3;
+      if (prog >= 100) {
+        clearInterval(this.timer);
+        this.timer = null;
+        this.setState({ status: 'ready', progress: 100 });
+      } else {
+        this.setState({ progress: prog });
+      }
+    }, 90);
+  }
+  cancel() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.setState({ status: this.prev === 'ready' ? 'stale' : this.prev, progress: 0 });
+  }
+
+  renderVals() {
+    const S = this.state, on = S.on, sel = S.sel, shape = S.shape, status = S.status;
+    const acc = '#C9431B';
+    const ppm = 2.78;
+    const V = {
+      size: 180, found: 2.0, baseT: 1.4, roads: 0.8,
+      w: { motorway: 1.6, trunk: 1.5, primary: 1.3, secondary: 1.1, tertiary: 0.9, residential: 0.7, service: 0.5, path: 0.4, rail: 1.0, lightrail: 0.7, tram: 0.5 },
+      corner: 0.35, smooth: 0.2, gap: 2.0, patch: 4.0, island: 1.5, thin: 0.8, wsmooth: 0.4,
+      borderW: 7.0, borderH: 3.0, markSize: 5.0, markH: 0.6, holeD: 6.0
+    };
+    const pc = (v, max) => Math.round(Math.min(100, Math.max(0, v / max * 100)));
+
+    // ---------- control builders ----------
+    const sw = (id, dis) => {
+      const o = !!on[id];
+      return { track: o ? acc : '#B3B8C2', knob: o ? '18px' : '2px', aria: String(o), toggle: () => this.flip(id), op: dis ? 0.4 : 1 };
+    };
+    const sec = (label, sub) => ({ isSection: true, label: label, sub: sub || '' });
+    const note = (t) => ({ isNote: true, label: t });
+    const stat = (label, value) => ({ isStat: true, label: label, value: value });
+    const tog = (label, id, dis) => Object.assign({ isToggle: true, label: label }, sw(id, dis));
+    const num = (label, val, unit, max, dec, dis) => ({ isNum: true, label: label, val: val.toFixed(dec), unit: unit, pct: pc(val, max), op: dis ? 0.4 : 1 });
+    const cat = (id, label, max) => {
+      const v = V.w[id];
+      return Object.assign({ isCat: true, label: label, val: v.toFixed(1), unit: 'mm', pct: pc(v, max), wop: on[id] ? 1 : 0.4 }, sw(id, false));
+    };
+    const seg = (label, key, opts, dis) => ({
+      isSeg: true, label: label, op: dis ? 0.4 : 1,
+      opts: opts.map((o) => {
+        const a = sel[key] === o[0];
+        return { t: o[1], bg: a ? '#fff' : 'transparent', fg: a ? '#1E2430' : '#4A5160', fw: a ? 700 : 600, sh: a ? '0 1px 2px rgba(0,0,0,.18)' : 'none', pick: () => this.setSel(key, o[0]) };
+      })
+    });
+
+    const totalH = (on.base ? V.baseT : 0) + V.found + V.roads;
+    let controls = [];
+    if (S.tab === 'features') {
+      controls = [
+        sec('Roads', 'width at final scale'),
+        cat('motorway', 'Motorway', 3), cat('trunk', 'Trunk', 3), cat('primary', 'Primary', 3), cat('secondary', 'Secondary', 3),
+        cat('tertiary', 'Tertiary', 3), cat('residential', 'Residential', 3), cat('service', 'Service', 3), cat('path', 'Paths & footways', 3),
+        sec('Railways', 'simple continuous strips'),
+        cat('rail', 'Rail', 3), cat('lightrail', 'Light rail', 3), cat('tram', 'Tram', 3),
+        sec('Combined height'),
+        num('Roads & rail height', V.roads, 'mm', 2, 1, false),
+        note('Roads and railways merge into one raised feature above the foundation. Bridges continue across water; tunnels are left out.')
+      ];
+    } else if (S.tab === 'quality') {
+      controls = [
+        sec('Corners & junctions'),
+        tog('Round sharp road corners', 'round', false),
+        num('Corner radius', V.corner, 'mm', 1.5, 2, !on.round),
+        sec('Road paths'),
+        tog('Smooth road paths', 'smooth', false),
+        num('Smoothing strength', V.smooth, 'mm', 1, 2, !on.smooth),
+        note('Path smoothing is independent of corner rounding, so you can have crisp junctions on smooth lines.'),
+        sec('Enclosed gaps'),
+        tog('Fill small gaps in roads & rail', 'gapfill', false),
+        num('Fill gaps smaller than', V.gap, 'mm²', 10, 1, !on.gapfill),
+        note('Includes small roundabout centres. Thresholds apply at the finished model size.')
+      ];
+    } else if (S.tab === 'water') {
+      controls = [
+        sec('Water patches'),
+        tog('Remove isolated small patches', 'patch', false),
+        num('Smaller than', V.patch, 'mm²', 20, 1, !on.patch),
+        sec('Land islands'),
+        tog('Fill small islands in water', 'island', false),
+        num('Smaller than', V.island, 'mm²', 20, 1, !on.island),
+        sec('Thin branches'),
+        tog('Remove thin water branches', 'thin', false),
+        num('Minimum width', V.thin, 'mm', 3, 1, !on.thin),
+        sec('Outline'),
+        tog('Smooth water outlines', 'wsmooth', false),
+        num('Smoothing strength', V.wsmooth, 'mm', 2, 2, !on.wsmooth),
+        note(on.base ? 'With the base on, water becomes a recess with a floor, ready for resin.' : 'With the base off, water becomes a through-opening.')
+      ];
+    } else if (S.tab === 'model') {
+      const ms = S.mshape;
+      const asp = shape === 'rect' ? 0.75 : 1;
+      const mshapeSeg = {
+        isSeg: true, label: 'Model shape', op: 1,
+        opts: [['circle', 'Circle'], ['square', 'Square'], ['rect', 'Rectangle']].map((o) => {
+          const a = ms === o[0];
+          return { t: o[1], bg: a ? '#fff' : 'transparent', fg: a ? '#1E2430' : '#4A5160', fw: a ? 700 : 600, sh: a ? '0 1px 2px rgba(0,0,0,.18)' : 'none', pick: () => this.touch({ mshape: o[0] }) };
+        })
+      };
+      const sizeRows = ms === 'circle' ? [num('Diameter', V.size, 'mm', 300, 0, false)]
+        : ms === 'square' ? [num('Width & height', V.size, 'mm', 300, 0, false)]
+        : [num('Width', V.size, 'mm', 300, 0, false), num('Height (from selection)', V.size * asp, 'mm', 300, 0, true)];
+      controls = [sec('Model shape', 'independent of the map area'), mshapeSeg, sec('Finished size')].concat(sizeRows, [
+        note(ms === 'rect' ? 'Height keeps the proportions of your map selection, so nothing is stretched.' : ms === 'circle' ? 'The map area is cropped to a circle at this diameter.' : 'The map area is cropped to a square at this size.'),
+        sec('City foundation'),
+        num('Foundation height', V.found, 'mm', 6, 1, false),
+        sec('Base'),
+        tog('Continuous base layer', 'base', false),
+        num('Base thickness', V.baseT, 'mm', 4, 1, !on.base),
+        stat('Total model height', totalH.toFixed(1) + ' mm')
+      ]);
+    } else {
+      const reliefLabel = sel.relief === 'engraved' ? 'Engraving depth' : 'Raised height';
+      controls = [
+        sec('Border'),
+        tog('Perimeter border', 'border', false),
+        num('Border width', V.borderW, 'mm', 15, 1, !on.border),
+        num('Border height', V.borderH, 'mm', 5, 1, !on.border),
+        sec('Clock markings'),
+        tog('Show clock markings', 'clock', false),
+        seg('Style', 'numerals', [['arabic', '1 2 3'], ['roman', 'I II III'], ['marks', 'Hour marks']], !on.clock),
+        seg('Dial', 'dial', [['full', 'Full dial'], ['quarters', '12 · 3 · 6 · 9']], !on.clock),
+        seg('Placement', 'place', [['border', 'On border'], ['inside', 'Inside map']], !on.clock),
+        seg('Relief', 'relief', [['raised', 'Raised'], ['engraved', 'Engraved']], !on.clock),
+        num('Marking size', V.markSize, 'mm', 12, 1, !on.clock),
+        num(reliefLabel, V.markH, 'mm', 2, 1, !on.clock),
+        sec('Centre hole'),
+        tog('Hole through the model', 'hole', false),
+        num('Hole diameter', V.holeD, 'mm', 30, 1, !on.hole)
+      ];
+    }
+    controls.forEach((c, i) => { if (c.isSection) c.bt = i === 0 ? 'none' : '1px solid #E1E3E8'; });
+
+    const tabDefs = [['features', 'Features'], ['quality', 'Quality'], ['water', 'Water'], ['model', 'Model'], ['border', 'Border & Clock']];
+    const tabs = tabDefs.map((d) => {
+      const a = S.tab === d[0];
+      return { label: d[1], fw: a ? 700 : 600, color: a ? '#1E2430' : '#4A5160', bg: a ? '#fff' : 'transparent', sh: a ? '0 1px 3px rgba(20,26,40,.2)' : 'none', pick: () => this.setState({ tab: d[0] }) };
+    });
+
+    // ---------- toolbar ----------
+    const pills = {
+      none: { bg: '#E3E5EA', fg: '#3A4150', dot: '#8A91A0', text: 'No preview yet' },
+      stale: { bg: '#FFF1CC', fg: '#5C3B00', dot: '#D99100', text: 'Preview out of date' },
+      ready: { bg: '#DDF3E4', fg: '#14532D', dot: '#1E9E55', text: 'Preview up to date' }
+    };
+    const prog = S.progress;
+    const stepDefs = [['Reading roads & rail', 0], ['Building geometry', 20], ['Cutting water & base', 45], ['Border, clock & hole', 70], ['Assembling mesh', 90]];
+    let stage = stepDefs[0][0];
+    stepDefs.forEach((d) => { if (prog >= d[1]) stage = d[0]; });
+    const pill = status === 'generating' ? { bg: '#E4EEFF', fg: '#17408F', dot: '#2F6FED', text: 'Generating ' + prog + '% · ' + stage } : pills[status];
+    const steps = stepDefs.map((d, i) => {
+      const nextT = i < 4 ? stepDefs[i + 1][1] : 101;
+      const done = prog >= nextT, now = prog >= d[1] && prog < nextT;
+      return { label: d[0], isDone: done, isNow: now, isWait: !done && !now, color: now ? '#1E2430' : done ? '#3A4150' : '#7A8294', fw: now ? 700 : 500 };
+    });
+    const gen = status === 'generating'
+      ? { label: 'Cancel', isCancel: true, isRun: false, bg: '#fff', fg: '#1E2430', bd: '#CBCED6', click: () => this.cancel() }
+      : status === 'ready'
+        ? { label: 'Regenerate', isCancel: false, isRun: true, bg: '#fff', fg: '#1E2430', bd: '#CBCED6', click: () => this.generate() }
+        : { label: status === 'stale' ? 'Regenerate Preview' : 'Generate Preview', isCancel: false, isRun: true, bg: 'linear-gradient(#D5502A,#BE3E17)', fg: '#fff', bd: '#AE3712', click: () => this.generate() };
+    const canExport = status === 'ready';
+    const exp = canExport
+      ? { disabled: false, bg: '#1E2430', fg: '#fff', bd: '#1E2430', cursor: 'pointer', title: 'Save the model as a 3MF file' }
+      : { disabled: true, bg: '#E9EAEE', fg: '#7A8294', bd: '#D6D8DD', cursor: 'not-allowed', title: 'Generate an up-to-date preview to export' };
+
+    // ---------- left: selection ----------
+    const cx = 200, cy = 277;
+    let sw_ = 300, sh_ = 300, rx = 150;
+    if (shape === 'square') { sw_ = 300; sh_ = 300; rx = 4; }
+    if (shape === 'rect') { sw_ = 300; sh_ = 225; rx = 4; }
+    const sx = cx - sw_ / 2, sy = cy - sh_ / 2;
+    const rr = (x, y, w, h, r) => 'M' + (x + r) + ' ' + y + 'H' + (x + w - r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + w) + ' ' + (y + r) + 'V' + (y + h - r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + w - r) + ' ' + (y + h) + 'H' + (x + r) + 'A' + r + ' ' + r + ' 0 0 1 ' + x + ' ' + (y + h - r) + 'V' + (y + r) + 'A' + r + ' ' + r + ' 0 0 1 ' + (x + r) + ' ' + y + 'Z';
+    const selPath = 'M0 0H400V554H0Z' + rr(sx, sy, sw_, sh_, rx);
+    const full = shape !== 'circle';
+    const hp = [
+      [cx, sy, true], [sx + sw_, cy, true], [cx, sy + sh_, true], [sx, cy, true],
+      [sx + sw_, sy, full], [sx + sw_, sy + sh_, full], [sx, sy + sh_, full], [sx, sy, full]
+    ];
+    const H = (i) => ({ x: hp[i][0], y: hp[i][1], d: hp[i][2] ? 'inline' : 'none' });
+    const sizeText = shape === 'circle' ? '12.0 km across' : shape === 'square' ? '12.0 × 12.0 km' : '12.0 × 9.0 km';
+    const ms = S.mshape;
+    const asp = shape === 'rect' ? 0.75 : 1;
+    const modelText = ms === 'circle' ? '180 mm ⌀' : ms === 'square' ? '180 × 180 mm' : '180 × ' + Math.round(180 * asp) + ' mm';
+    const chipText = shape === 'circle' ? '⌀ 12.0 km' : shape === 'square' ? '12 × 12 km' : '12 × 9 km';
+    const shapes = [['circle', 'Circle'], ['square', 'Square'], ['rect', 'Rectangle']].map((d) => {
+      const a = shape === d[0];
+      return { label: d[1], isCircle: d[0] === 'circle', isSquare: d[0] === 'square', isRect: d[0] === 'rect', bg: a ? '#fff' : 'transparent', fg: a ? '#1E2430' : '#4A5160', fw: a ? 700 : 600, sh: a ? '0 1px 2px rgba(0,0,0,.18)' : 'none', pick: () => this.touch({ shape: d[0] }) };
+    });
+
+    // ---------- 3D model ----------
+    const fh = Math.round(V.found * 4), bh = on.base ? Math.round(V.baseT * 4) : 0;
+    const fy1 = 410 + fh, fy2 = fy1 + bh;
+    const nR = Math.min(6, Math.max(1, Math.round(V.roads * 4)));
+    const nB = on.border ? Math.min(12, Math.round(V.borderH * 4)) : -1;
+    const stack = (n, top, wall) => {
+      const o = {};
+      for (let i = 0; i <= 12; i++) {
+        o[i] = { t: 'translate(328,' + (410 - i) + ') scale(1,0.62)', d: i <= n ? 'inline' : 'none', c: i === n ? top : wall };
+      }
+      return o;
+    };
+    const rs = stack(nR, '#3C4558', '#222833');
+    const bs = stack(nB, '#9C6A47', '#6B4630');
+    const rdw = (id, show) => ({ d: on[id] ? 'inline' : 'none', w: (V.w[id] * ppm).toFixed(2) });
+    const rd = {
+      motorway: rdw('motorway'), trunk: rdw('trunk'), primary: rdw('primary'), secondary: rdw('secondary'), tertiary: rdw('tertiary'),
+      res: rdw('residential'), service: rdw('service'), path: rdw('path'), rail: rdw('rail'), light: rdw('lightrail'), tram: rdw('tram')
+    };
+    rd.res = { d: on.residential ? 'inline' : 'none', w: (V.w.residential * ppm).toFixed(2) };
+    const bw = V.borderW * ppm;
+    let hw = 250, hh = 250, grx = 250;
+    if (ms === 'square') { hw = 240; hh = 240; grx = 8; }
+    if (ms === 'rect') { hw = 250; hh = 250 * asp; grx = 8; }
+    const hy = hh * 0.62;
+    const g = { x: -hw, y: -hh, w: 2 * hw, h: 2 * hh, rx: grx };
+    const ring = { x: (-hw + bw / 2).toFixed(2), y: (-hh + bw / 2).toFixed(2), w: (2 * hw - bw).toFixed(2), h: (2 * hh - bw).toFixed(2), rx: Math.max(0, grx - bw / 2).toFixed(2) };
+    const wall = (yBot) => ms === 'circle'
+      ? 'M 78 410 V ' + yBot + ' A 250 155 0 0 0 578 ' + yBot + ' V 410 Z'
+      : 'M ' + (328 - hw) + ' ' + (410 - hy).toFixed(1) + ' H ' + (328 + hw) + ' V ' + (yBot + hy).toFixed(1) + ' H ' + (328 - hw) + ' Z';
+    const holeR = V.holeD / 2 * ppm;
+    const surfaceY = (on.border && sel.place === 'border') ? 410 - Math.max(0, nB) : 410;
+
+    // clock marks
+    const marks = [];
+    if (on.clock) {
+      const sz = V.markSize * ppm;
+      const dIn = sel.place === 'border' ? (on.border ? bw / 2 : sz * 0.7) : (on.border ? bw : 0) + sz * 0.9 + 6;
+      const arabic = ['12', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+      const roman = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+      const engraved = sel.relief === 'engraved';
+      const depth = Math.max(1, Math.round(V.markH * 4));
+      let color, shadow;
+      if (!engraved) {
+        color = '#E3B25B';
+        const sh = [];
+        for (let k = 1; k <= depth; k++) sh.push('0 ' + k + 'px 0 #9A7430');
+        shadow = sh.join(',');
+      } else {
+        color = sel.place === 'border' ? '#E9DFC9' : '#A89C80';
+        shadow = '0 -1px 0 rgba(40,24,10,.75)';
+      }
+      for (let i = 0; i < 12; i++) {
+        if (sel.dial === 'quarters' && i % 3 !== 0) continue;
+        const ang = i * 30 * Math.PI / 180;
+        let px, py;
+        if (ms === 'circle') {
+          px = (250 - dIn) * Math.sin(ang); py = -(250 - dIn) * Math.cos(ang);
+        } else {
+          const sn = Math.abs(Math.sin(ang)), cs = Math.abs(Math.cos(ang));
+          const tt = Math.min(sn > 1e-6 ? (hw - dIn) / sn : 1e9, cs > 1e-6 ? (hh - dIn) / cs : 1e9);
+          px = tt * Math.sin(ang); py = -tt * Math.cos(ang);
+        }
+        const x = 328 + px;
+        const ty = surfaceY + py * 0.62;
+        const base = 'position:absolute; left:' + x.toFixed(1) + 'px; top:' + ty.toFixed(1) + 'px; line-height:1; white-space:nowrap; ';
+        if (sel.numerals === 'marks') {
+          const len = sz * (i % 3 === 0 ? 1.1 : 0.7);
+          const wid = i % 3 === 0 ? 3.6 : 2.4;
+          marks.push({ text: '', style: base + 'width:' + wid + 'px; height:' + len.toFixed(1) + 'px; background:' + color + '; box-shadow:' + shadow + '; transform:translate(-50%,-50%) scaleY(0.62) rotate(' + (i * 30) + 'deg)' });
+        } else {
+          const roman_ = sel.numerals === 'roman';
+          marks.push({
+            text: roman_ ? roman[i] : arabic[i],
+            style: base + 'font-size:' + (sz * (roman_ ? 0.95 : 1.05)).toFixed(1) + 'px; font-weight:700; letter-spacing:' + (roman_ ? '0.02em' : '0') + '; font-family:' + (roman_ ? "Georgia,'Times New Roman',serif" : "-apple-system,'SF Pro Text',sans-serif") + '; color:' + color + '; text-shadow:' + shadow + '; transform:translate(-50%,-50%) scaleY(0.62)'
+          });
+        }
+      }
+    }
+
+    const legend = [
+      { name: 'Border', val: V.borderH.toFixed(1) + ' mm', color: '#9C6A47', bd: '#6B4630', op: on.border ? 1 : 0.4 },
+      { name: 'Roads & rail', val: V.roads.toFixed(1) + ' mm', color: '#3C4558', bd: '#222833', op: 1 },
+      { name: 'City foundation', val: V.found.toFixed(1) + ' mm', color: '#E9DFC9', bd: '#B9AB8C', op: 1 },
+      { name: 'Base', val: on.base ? V.baseT.toFixed(1) + ' mm' : 'off', color: '#8FB1C4', bd: '#5F8196', op: on.base ? 1 : 0.4 },
+      { name: on.base ? 'Water (recess)' : 'Water (opening)', val: 'cut out', color: on.base ? '#7DB3D1' : '#D8DBE0', bd: '#5F8196', op: 1 }
+    ];
+
+    const dm = { ok: S.coverage === 'ok', partial: S.coverage === 'partial', missing: S.coverage === 'missing' };
+    const st = { none: status === 'none', stale: status === 'stale', gen: status === 'generating', ready: status === 'ready' };
+
+    return {
+      docName: 'Kyiv · ' + modelText.replace(' ⌀', ' circle'),
+      pill: pill, gen: gen, exp: exp, steps: steps,
+      progW: prog, progD: status === 'generating' ? 'block' : 'none', progress: prog,
+      dm: dm, st: st,
+      shapes: shapes,
+      mapD: dm.missing ? 'none' : 'inline', mapMissingD: dm.missing ? 'inline' : 'none', hatchD: dm.partial ? 'inline' : 'none',
+      selPath: selPath, sel: { x: sx, y: sy, w: sw_, h: sh_, rx: rx },
+      chip: { x: cx - 56, y: sy - 30, tx: cx, ty: sy - 15, text: chipText },
+      h0: H(0), h1: H(1), h2: H(2), h3: H(3), h4: H(4), h5: H(5), h6: H(6), h7: H(7),
+      sizeText: sizeText, modelText: modelText, heightText: totalH.toFixed(1) + ' mm',
+      modelD: status === 'none' ? 'none' : 'inline',
+      modelOp: status === 'generating' ? 0.3 : 1,
+      modelFilter: status === 'stale' ? 'saturate(0.8)' : 'none',
+      thinD: on.thin ? 'none' : 'inline', pondD: on.patch ? 'none' : 'inline', islD: on.island ? 'none' : 'inline',
+      holeD: on.hole ? 'inline' : 'none', holeR: holeR.toFixed(2), holeRy: (holeR * 0.62).toFixed(2), holeBottomY: 410 + fh + bh,
+      shadowY: fy2 + 12, shadowRx: hw + 22, shadowRy: ms === 'circle' ? 150 : (hy + 12).toFixed(1),
+      g: g, ring: ring,
+      baseWall: wall(fy2),
+      foundWall: wall(fy1),
+      baseD: on.base ? 'inline' : 'none',
+      floorDy: (fh / 0.62).toFixed(2), floorColor: on.base ? '#7DB3D1' : '#D8DBE0',
+      ringR: (250 - bw / 2).toFixed(2), ringW: bw.toFixed(2),
+      r0: rs[0], r1: rs[1], r2: rs[2], r3: rs[3], r4: rs[4], r5: rs[5], r6: rs[6],
+      b0: bs[0], b1: bs[1], b2: bs[2], b3: bs[3], b4: bs[4], b5: bs[5], b6: bs[6], b7: bs[7], b8: bs[8], b9: bs[9], b10: bs[10], b11: bs[11], b12: bs[12],
+      rd: rd, marks: marks, legend: legend,
+      tabs: tabs, controls: controls,
+      dlg: { open: S.dialog === 'download', started: S.dlStarted, idle: !S.dlStarted },
+      openDlg: () => this.setState({ dialog: 'download' }),
+      closeDlg: () => this.setState({ dialog: 'none' }),
+      startDl: () => this.setState({ dlStarted: true }),
+      cancelDl: () => this.setState({ dlStarted: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

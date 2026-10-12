@@ -14,3 +14,5 @@ gen/
 
 # macOS metadata.
 .DS_Store
+
+.idea

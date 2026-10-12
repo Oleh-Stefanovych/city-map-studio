@@ -178,3 +178,9 @@ Automate **this app** over that endpoint — do not launch a separate browser.
 Before changing application code or tests, including one-line fixes, style tweaks, and
 refactors, and when running or debugging tests, read `.agents/skills/mobrowser-testing/SKILL.md`.
 <!-- END:mobrowser-testing -->
+
+<!-- BEGIN:project-handoff -->
+# Project: City Map Studio
+
+macOS app that turns local OpenStreetMap PBF files into flat, 3D-printable city maps (3MF export only). **Start with `docs/README.md`** — it lists the product spec, UI design spec, design tokens/defaults, architecture recommendations, geometry/3MF rules and the milestone plan. The MōBrowser rules above still apply to every change.
+<!-- END:project-handoff -->
